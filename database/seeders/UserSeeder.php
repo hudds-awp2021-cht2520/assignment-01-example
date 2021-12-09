@@ -18,5 +18,11 @@ class UserSeeder extends Seeder
             ->count(50)
             ->hasNotes(rand(0, 50))
             ->create();
+
+        User::factory()
+            ->hasNotes(27)
+            ->create([
+                'email' => 'admin@email.com'
+            ]);
     }
 }

@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Note;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+use App\Models\Note;
+
+use App\Http\Requests\NoteRequest;
 
 class NoteController extends Controller
 {
@@ -14,7 +19,13 @@ class NoteController extends Controller
      */
     public function index()
     {
-        //
+        $notes = Auth::user()
+            ->notes()
+            ->paginate(20);
+        
+        return view('notes/index', [
+            'notes' => $notes
+        ]);
     }
 
     /**
@@ -24,18 +35,28 @@ class NoteController extends Controller
      */
     public function create()
     {
-        //
+        return view('notes/create');
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\NoteRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(NoteRequest $request)
     {
-        //
+        $note = new Note();
+        $note->content = $request->content;
+        $note->user()->associate(Auth::user());
+        $note->save();
+dd([$request, $note]);
+        return redirect()
+            ->route('notes.index')
+            ->with('alerts', [[
+                'level' => 'success',
+                'message' => 'A note was created.'
+            ]]);
     }
 
     /**
@@ -46,7 +67,13 @@ class NoteController extends Controller
      */
     public function show(Note $note)
     {
-        //
+        if ($note->user->id !== Auth::user()->id) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        return view('notes.show', [
+            'note' => $note
+        ]);
     }
 
     /**
@@ -57,19 +84,37 @@ class NoteController extends Controller
      */
     public function edit(Note $note)
     {
-        //
+        if ($note->user->id !== Auth::user()->id) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        return view('notes.edit', [
+            'note' => $note
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\NoteRequest  $request
      * @param  \App\Models\Note  $note
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Note $note)
+    public function update(NoteRequest $request, Note $note)
     {
-        //
+        if ($note->user->id !== Auth::user()->id) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        $note->content = $request->content;
+        $note->save();
+
+        return redirect()
+            ->route('notes.index')
+            ->with('alerts', [[
+                'level' => 'success',
+                'message' => 'The note was updated.'
+            ]]);
     }
 
     /**
@@ -80,6 +125,17 @@ class NoteController extends Controller
      */
     public function destroy(Note $note)
     {
-        //
+        if ($note->user->id !== Auth::user()->id) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        $note->delete();
+
+        return redirect()
+            ->route('notes.index')
+            ->with('alerts', [[
+                'level' => 'success',
+                'message' => 'The note was deleted.'
+            ]]);
     }
 }
