@@ -50,7 +50,7 @@ class NoteController extends Controller
         $note->content = $request->content;
         $note->user()->associate(Auth::user());
         $note->save();
-dd([$request, $note]);
+
         return redirect()
             ->route('notes.index')
             ->with('alerts', [[
