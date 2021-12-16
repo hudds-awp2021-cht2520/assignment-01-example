@@ -71,6 +71,11 @@ resource "azurerm_app_service" "as" {
 
   site_config {
     scm_type = "LocalGit"
+    linux_fx_version  = "PHP|8.0.11"
+  }
+
+  app_settings = {
+    "POST_BUILD_COMMAND" = "infrastructure/scripts/post_build.sh"
   }
 }  
 
